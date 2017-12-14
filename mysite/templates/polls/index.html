@@ -1,0 +1,21 @@
+
+{% extends "polls/_header.html" %}
+
+{% block content %}
+    {% load static %}
+{#    <img src='{% static "images/1.png" %}' alt="Background">#}
+
+    <h3>List Of Questions</h3>
+
+    {% if lastest_question_list %}
+        <ul>
+        {% for question in lastest_question_list %}
+{#            <li><a href="/polls/{{ question.id }}">{{ question.question_text }}</a></li>#}
+            <li><a href="{% url 'polls:detail' question.id %}">{{ question.question_text }}</a></li>
+        {% endfor %}
+        </ul>
+    {% else %}
+    <p>No polls are available.</p>
+    {% endif %}
+    <a href="{% url 'polls:index2' %}" >Top 3</a>
+{% endblock %}

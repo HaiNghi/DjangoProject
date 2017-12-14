@@ -1,0 +1,5 @@
+[client]
+database = polls
+user = root
+password = Hunt3r_9995
+default-character-set = utf8

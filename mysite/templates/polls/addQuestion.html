@@ -1,0 +1,11 @@
+{% extends 'polls/_header.html' %}
+{% block content %}
+    <h3 style="color: red">INPUT QUESTION 'S CONTENT</h3>
+    <br>
+    <form method="post" action="{% url 'polls:addQuestion'%}">
+        {{ form.as_p }}
+        {% csrf_token %}
+    <input type="submit" class="btn btn-success" value="Add question">
+    </form>
+
+{% endblock %}

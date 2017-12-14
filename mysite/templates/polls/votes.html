@@ -1,0 +1,32 @@
+{% extends 'polls/_header.html' %}
+
+{% block content %}
+        <div class="container-fluid">
+            {% if error_message %}
+                <p>{{ error_message }}</p>
+            {% endif %}
+            <br>
+            {% if question_obj %}
+                <h4 style="font-style: italic;">{{ question_obj.question_text }}</h4>
+            {% endif %}
+            <br>
+            <form action="{% url 'polls:vote' question_obj.id%}" method="post">
+                {% csrf_token %}
+                {{ formVote }}
+            <input type="submit" class="btn btn-danger" value="vote">
+            </form>
+        </div>
+        <br>
+        <h5>Add more choices for this question?</h5>
+        <form method="POST" action="{% url 'polls:vote' question_obj.id%}">
+            {{ formAddChoice }}
+            {% csrf_token %}
+{#            <div class="form-row">#}
+{#                <input type="hidden" id="question_id" name="question_id" value="{{ question.id }}">#}
+{#                <input  type="text" name="choice_content" id="choice_content">#}
+{#                <input type="submit" class="btn btn-danger" value="Add more choices">#}
+{#            </div>#}
+        <input type="submit" class="btn btn-danger" value="Add more choices">
+        </form>
+
+{% endblock %}

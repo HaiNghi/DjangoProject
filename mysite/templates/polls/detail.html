@@ -1,0 +1,23 @@
+{% extends 'polls/_header.html' %}
+
+{% block content %}
+        <div class="container-fluid">
+            <table class="table table-bordered table-hover" >
+                <thead style="background: red;">
+                    <tr>
+                        <th>Question ID</th>
+                        <th>Content</th>
+                        <th>Public date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ question.id }}</td>
+                        <td>{{ question.question_text }}</td>
+                        <td>{{ question.pub_date }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        <a href="{% url 'polls:vote' question.id%}">Votes?</a>
+        </div>
+{% endblock %}

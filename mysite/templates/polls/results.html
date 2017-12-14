@@ -1,0 +1,22 @@
+{% extends 'polls/_header.html' %}
+
+{% block content %}
+    <h1>{{ question }}</h1>
+    <ul>
+        {% for choice in question.choice_set.all %}
+            <li>
+                {{ choice.choice_text }} -- {{ choice.votes }} vote{{ choice.votes|pluralize }}
+            </li>
+        {% endfor %}
+    </ul>
+{#    <a href="{% url 'polls:vote' question.id %}">Vote again?</a>#}
+
+    <script>
+    window.setTimeout(function(){
+
+        // Move to a new location or you can do something else
+        window.location.href = "{{pre_link}}";
+
+    }, 1000);
+    </script>
+{% endblock %}

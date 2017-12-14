@@ -1,0 +1,27 @@
+{% extends 'polls/_header.html' %}
+
+{% block content %}
+        <div class="container-fluid">
+            {% for question in question_list %}
+                <h4>{{ question.question_text }}</h4>
+                    <table class="table table-bordered table-hover" >
+                        <thead style="background: greenyellow;">
+                            <tr>
+                                <th>Choice Content</th>
+                                <th>Votes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for choice in question.choice_set.all %}
+                            <tr>
+                                <td>{{ choice.choice_text }}</td>
+                                <td>{{ choice.votes }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                <br>
+
+            {% endfor %}
+        </div>
+{% endblock %}

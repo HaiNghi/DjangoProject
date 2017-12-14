@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My site</title>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}" />
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.min.css' %}" />
+</head>
+<body>
+    <ul class="topnav navigation">
+          <li><a href="{% url 'polls:index' %}">Home</a></li>
+          <li><a href="{% url 'polls:addQuestion' %}">Add Question</a></li>
+          <li><a href="{% url 'polls:allQuestion' %}">All Questions</a></li>
+          <li><a href="about.asp">About</a></li>
+    </ul>
+    <br>
+    <div class="content container-fluid">
+        {% block content %}{% endblock %}
+    </div>
+
+</body>
+</html>
