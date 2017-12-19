@@ -41,14 +41,20 @@
 {% for field in form %}
   <div class="form-group">
     {{ field.label_tag }}
-{#    {% render_field field class=field|input_class %}#}
+    {% if form.is_bound %}
+        {% if field.errors %}
+         {{ field|add_class:"form-control is-invalid" }}
+        {% for error in field.errors %}
+          <div class="invalid-feedback">
+            {{ error }}
+          </div>
+        {% endfor %}
+      {% else %}
     {{ field|add_class:"form-control is-valid" }}
-{#    {{ field|add_class: field|input_class }}#}
-    {% for error in field.errors %}
-      <div class="invalid-feedback">
-        {{ error }}
-      </div>
-    {% endfor %}
+    {% endif %}
+   {% else %}
+        {{ field|add_class:"form-control" }}
+    {% endif %}
     {% if field.help_text %}
       <small class="form-text text-muted">
         {{ field.help_text|safe }}
@@ -56,3 +62,21 @@
     {% endif %}
   </div>
 {% endfor %}
+
+{#{% for field in form %}#}
+{#  <div class="form-group">#}
+{#    {{ field.label_tag }}#}
+{#    {% render_field field class=field|input_class %}#}
+{#   {{ field|add_class|input_class }}#}
+{#    {% for error in field.errors %}#}
+{#      <div class="invalid-feedback">#}
+{#        {{ error }}#}
+{#      </div>#}
+{#    {% endfor %}#}
+{#    {% if field.help_text %}#}
+{#      <small class="form-text text-muted">#}
+{#        {{ field.help_text|safe }}#}
+{#      </small>#}
+{#    {% endif %}#}
+{#  </div>#}
+{#{% endfor %}#}
