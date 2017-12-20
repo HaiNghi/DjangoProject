@@ -4,6 +4,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Count
 from django.shortcuts import render, get_object_or_404,redirect
 from django.http import HttpResponse, Http404
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.decorators import method_decorator
 from django.views.generic import UpdateView, ListView
@@ -31,26 +32,41 @@ class BoardListView(ListView):
     template_name = 'home.html'
 
 
-def board_topics(request,pk):
-    try:
-        board = Board.objects.get(pk=pk)
-        queryset= board.topics.order_by('-last_updated').annotate(replies=Count('posts')-1)
-        page = request.GET.get('page', 1)
-        paginator = Paginator(queryset, 20)
-        try:
-            topics = paginator.page(page)
-        except PageNotAnInteger:
-            # fallback to the first page
-            topics = paginator.page(1)
-        except EmptyPage:
-            # probably the user tried to add a page number
-            # in the url, so we fallback to the last page
-            topics = paginator.page(paginator.num_pages)
-    except Board.DoesNotExist:
-        raise Http404
-    return render(request, 'topics.html', {'board': board,'topics':topics})
-    # board=Board.objects.get(pk=pk)
-    # return render(request,'topics.html',{'board':board})
+# def board_topics(request,pk):
+#     try:
+#         board = Board.objects.get(pk=pk)
+#         queryset= board.topics.order_by('-last_updated').annotate(replies=Count('posts')-1)
+#         page = request.GET.get('page', 1)
+#         paginator = Paginator(queryset, 10)
+#         try:
+#             topics = paginator.page(page)
+#         except PageNotAnInteger:
+#             # fallback to the first page
+#             topics = paginator.page(1)
+#         except EmptyPage:
+#             # probably the user tried to add a page number
+#             # in the url, so we fallback to the last page
+#             topics = paginator.page(paginator.num_pages)
+#     except Board.DoesNotExist:
+#         raise Http404
+#     return render(request, 'topics.html', {'board': board,'topics':topics})
+#     # board=Board.objects.get(pk=pk)
+#     # return render(request,'topics.html',{'board':board})
+
+class TopicListView(ListView):
+    model = Topic
+    context_object_name =  'topics'
+    template_name = 'topics.html'
+    paginate_by = 10
+
+    def get_context_data(self, **kwargs):
+        kwargs['board'] = self.board
+        return super().get_context_data(**kwargs)
+
+    def get_queryset(self):
+        self.board= get_object_or_404(Board, pk=self.kwargs.get('pk'))
+        queryset=self.board.topics.order_by('last_updated').annotate(replies=Count('posts')-1)
+        return queryset
 
 @login_required
 def new_topic(request,pk):
@@ -93,31 +109,37 @@ def new_topic(request,pk):
             form = NewTopicForm()
         return render(request, 'new_topic.html', {'board': board, 'form': form})
 
-def topic_posts(request, pk, topic_pk):
-    topic=get_object_or_404(Topic,board__pk=pk,pk=topic_pk)
-    topic.views+=1
-    topic.save()
-    return render(request,'topic_posts.html',{'topic':topic})
+# def topic_posts(request, pk, topic_pk):
+#     topic=get_object_or_404(Topic,board__pk=pk,pk=topic_pk)
+#     topic.views+=1
+#     topic.save()
+#     return render(request,'topic_posts.html',{'topic':topic})
 
 @login_required
-def reply_topic(request,pk,topic_pk):
-    topic=get_object_or_404(Topic,board__pk=pk, pk=topic_pk)
-    if request.method =='POST':
-        form= PostForm(request.POST)
-
+def reply_topic(request, pk, topic_pk):
+    topic = get_object_or_404(Topic, board__pk=pk, pk=topic_pk)
+    if request.method == 'POST':
+        form = PostForm(request.POST)
         if form.is_valid():
-            post=form.save(commit=False)
-            post.topic=topic
-            post.created_by= request.user
-            post.message=form.cleaned_data.get('message')
+            post = form.save(commit=False)
+            post.topic = topic
+            post.created_by = request.user
             post.save()
 
-            return redirect('topic_posts',pk=pk, topic_pk=topic_pk)
+            topic.last_updated = timezone.now()
+            topic.save()
+
+            topic_url = reverse('topic_posts', kwargs={'pk': pk, 'topic_pk': topic_pk})
+            topic_post_url = '{url}?page={page}#{id}'.format(
+                url=topic_url,
+                id=post.pk,
+                page=topic.get_page_count()
+            )
+
+            return redirect(topic_post_url)
     else:
-        form= PostForm()
-
-    return render(request,'reply_topic.html',{'topic':topic, 'form':form})
-
+        form = PostForm()
+    return render(request, 'reply_topic.html', {'topic': topic, 'form': form})
 
 @method_decorator(login_required, name='dispatch')
 class PostUpdateView(UpdateView):
@@ -136,4 +158,27 @@ class PostUpdateView(UpdateView):
         post.updated_at = timezone.now()
         post.updated_by = self.request.user
         post.save()
-        return redirect('topic_posts',pk=post.topic.board.pk, topic_pk = post.topic.pk, post_pk= post.pk)
+        return redirect('topic_posts', pk=post.topic.board.pk, topic_pk=post.topic.pk)
+        # return redirect('topic_posts',pk=post.topic.board.pk, topic_pk = post.topic.pk, post_pk= post.pk)
+
+class PostListView(ListView):
+    model = Post
+    context_object_name = 'posts'
+    template_name = 'topic_posts.html'
+    paginate_by = 20
+
+    def get_context_data(self, **kwargs):
+
+        session_key = 'viewed_topic_{}'.format(self.topic.pk)  # <-- here
+        if not self.request.session.get(session_key, False):
+            self.topic.views += 1
+            self.topic.save()
+            self.request.session[session_key] = True           # <-- until here
+
+        kwargs['topic'] = self.topic
+        return super().get_context_data(**kwargs)
+
+    def get_queryset(self):
+        self.topic = get_object_or_404(Topic, board__pk=self.kwargs.get('pk'), pk=self.kwargs.get('topic_pk'))
+        queryset = self.topic.posts.order_by('created_at')
+        return queryset
