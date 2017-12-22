@@ -155,10 +155,12 @@ def success(request):
     return render(request,'polls/success.html')
 
 def vote(request,question_id):
-
-    c=Choice.objects.filter(question_id=question_id)
-    question_obj=Question.objects.get(id=question_id)
+    c = Choice.objects.filter(question_id=question_id)
     template = loader.get_template('polls/votes.html')
+    try:
+        question_obj=Question.objects.get(id=question_id)
+    except Question.DoesNotExist:
+        raise Http404
 
     if request.method == 'POST':
         formVote = FormVote(request.POST,question_id=question_id)
